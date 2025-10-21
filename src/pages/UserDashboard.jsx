@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { routes } from '../routes';
 import Swal from 'sweetalert2';
 import { auth } from '../../firebaseConfig';
-import { routes } from '../routes';
 
-const Home = () => {
+const UserDashboard = () => {
     const navigate = useNavigate();
     const user = auth.currentUser;
 
@@ -48,20 +48,14 @@ const Home = () => {
                         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span className="text-2xl">✓</span>
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome to Home!</h1>
-                        <p className="text-slate-600 break-all">{user?.email || 'Guest'}</p>
+                        <h1 className="text-3xl font-bold text-slate-900 mb-2">User Dashboard</h1>
+                        <p className="text-slate-600 break-all">{user?.email || 'User'}</p>
                     </div>
                     <button
-                        onClick={() => navigate(routes.dashboard.user)}
+                        onClick={() => navigate(routes.home)}
                         className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 mb-2"
                     >
-                        Go to User Dashboard
-                    </button>
-                    <button
-                        onClick={() => navigate(routes.dashboard.admin)}
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 mb-2"
-                    >
-                        Go to Admin Dashboard
+                        Go to Home
                     </button>
                     <button
                         onClick={handleLogout}
@@ -75,4 +69,4 @@ const Home = () => {
     );
 };
 
-export default Home;
+export default UserDashboard;

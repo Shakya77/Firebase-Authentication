@@ -1,54 +1,60 @@
-import { onAuthStateChanged } from "firebase/auth"
-import { useEffect, useState } from "react"
-import Swal from "sweetalert2"
-import { auth } from "../../firebaseConfig"
-import Login from "../components/Login"
-import SignUp from "../components/SignUp"
+import React, { useEffect, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import Swal from 'sweetalert2';
+import Login from '../components/Login';
+import SignUp from '../components/SignUp';
+import { routes } from '../routes';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../../firebaseConfig';
 
-export default function Authentication() {
-    const [user, setUser] = useState(null)
-    const [isLogin, setIsLogin] = useState(true)
-    const [loading, setLoading] = useState(true)
+const Authentication = () => {
+    const [user, setUser] = useState(null);
+    const [isLogin, setIsLogin] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser)
-            setLoading(false)
-        })
-        return unsubscribe
-    }, [])
+            setUser(currentUser);
+            setLoading(false);
+            if (currentUser) {
+                navigate(routes.home);
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
 
     const handleLogout = async () => {
         Swal.fire({
-            title: "Logout?",
-            text: "Are you sure you want to logout?",
-            icon: "question",
+            title: 'Logout?',
+            text: 'Are you sure you want to logout?',
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: "#ef4444",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: "Yes, logout",
-            cancelButtonText: "Cancel",
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel',
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await auth.signOut()
+                    await auth.signOut();
                     Swal.fire({
-                        icon: "success",
-                        title: "Logged Out",
-                        text: "You have been logged out successfully",
+                        icon: 'success',
+                        title: 'Logged Out',
+                        text: 'You have been logged out successfully',
                         timer: 2000,
                         showConfirmButton: false,
-                    })
+                    });
                 } catch (err) {
                     Swal.fire({
-                        icon: "error",
-                        title: "Error",
-                        text: "Failed to logout",
-                    })
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to logout',
+                    });
                 }
             }
-        })
-    }
+        });
+    };
 
     if (loading) {
         return (
@@ -58,7 +64,7 @@ export default function Authentication() {
                     <p className="mt-4 text-slate-600">Loading...</p>
                 </div>
             </div>
-        )
+        );
     }
 
     return (
@@ -86,21 +92,21 @@ export default function Authentication() {
                     <div className="bg-white rounded-lg shadow-lg p-8">
                         <div className="mb-8">
                             <h1 className="text-3xl font-bold text-slate-900 text-center mb-2">
-                                {isLogin ? "Welcome Back" : "Create Account"}
+                                {isLogin ? 'Welcome Back' : 'Create Account'}
                             </h1>
-                            <p className="text-center text-slate-600">{isLogin ? "Sign in to your account" : "Join us today"}</p>
+                            <p className="text-center text-slate-600">{isLogin ? 'Sign in to your account' : 'Join us today'}</p>
                         </div>
 
                         {isLogin ? <Login /> : <SignUp />}
 
                         <div className="mt-6 text-center">
                             <p className="text-slate-600">
-                                {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+                                {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
                                 <button
                                     onClick={() => setIsLogin(!isLogin)}
                                     className="text-blue-600 hover:text-blue-700 font-semibold transition duration-200"
                                 >
-                                    {isLogin ? "Sign Up" : "Login"}
+                                    {isLogin ? 'Sign Up' : 'Login'}
                                 </button>
                             </p>
                         </div>
@@ -108,5 +114,7 @@ export default function Authentication() {
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
+
+export default Authentication;

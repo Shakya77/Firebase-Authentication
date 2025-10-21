@@ -1,165 +1,82 @@
-import { createUserWithEmailAndPassword } from "firebase/auth"
-import { useState } from "react"
-import Swal from "sweetalert2"
-import { auth } from "../../firebaseConfig"
+import React, { useState } from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { routes } from '../routes';
+import { auth, db } from '../../firebaseConfig';
 
-export default function SignUp() {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const [loading, setLoading] = useState(false)
+const SignUp = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const handleSignUp = async (e) => {
-        e.preventDefault()
-
-        if (!email || !password || !confirmPassword) {
-            Swal.fire({
-                icon: "warning",
-                title: "Missing Fields",
-                text: "Please fill in all fields",
-            })
-            return
-        }
-
+        e.preventDefault();
         if (password !== confirmPassword) {
-            Swal.fire({
-                icon: "error",
-                title: "Passwords Don't Match",
-                text: "Please make sure your passwords match",
-            })
-            return
+            setError('Passwords do not match');
+            return;
         }
-
-        if (password.length < 6) {
-            Swal.fire({
-                icon: "warning",
-                title: "Weak Password",
-                text: "Password must be at least 6 characters long",
-            })
-            return
-        }
-
-        if (!/[A-Z]/.test(password)) {
-            Swal.fire({
-                icon: "warning",
-                title: "Weak Password",
-                text: "Password must contain at least one uppercase letter",
-            })
-            return
-        }
-
-        if (!/[0-9]/.test(password)) {
-            Swal.fire({
-                icon: "warning",
-                title: "Weak Password",
-                text: "Password must contain at least one number",
-            })
-            return
-        }
-
-        setLoading(true)
         try {
-            await createUserWithEmailAndPassword(auth, email, password)
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            await setDoc(doc(db, 'users', user.uid), { role: 'user' });
+            setError(null);
             Swal.fire({
-                icon: "success",
-                title: "Account Created!",
-                text: "Welcome! Your account has been created successfully",
+                icon: 'success',
+                title: 'Signed Up',
+                text: 'Account created successfully!',
                 timer: 2000,
                 showConfirmButton: false,
-            })
-            setEmail("")
-            setPassword("")
-            setConfirmPassword("")
+            });
+            navigate(routes.home);
         } catch (err) {
-            let errorMessage = "Sign up failed"
-            if (err.code === "auth/email-already-in-use") {
-                errorMessage = "This email is already registered"
-            } else if (err.code === "auth/invalid-email") {
-                errorMessage = "Invalid email address"
-            } else if (err.code === "auth/weak-password") {
-                errorMessage = "Password is too weak"
-            }
-
+            setError(err.message);
             Swal.fire({
-                icon: "error",
-                title: "Sign Up Failed",
-                text: errorMessage,
-            })
-        } finally {
-            setLoading(false)
+                icon: 'error',
+                title: 'Error',
+                text: err.message,
+            });
         }
-    }
+    };
 
     return (
-        <form onSubmit={handleSignUp} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
-                <div className="relative">
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                    >
-                        {showPassword ? "👁️" : "👁️‍🗨️"}
-                    </button>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Min 6 chars, 1 uppercase, 1 number</p>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Confirm Password</label>
-                <div className="relative">
-                    <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                    >
-                        {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
-                    </button>
-                </div>
-            </div>
-
+        <div className="space-y-4">
+            <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+            <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+            <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm Password"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
             <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:scale-100"
+                onClick={handleSignUp}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
             >
-                {loading ? "Creating account..." : "Create Account"}
+                Sign Up
             </button>
+            {error && <p className="text-red-500 mt-2">{error}</p>}
+        </div>
+    );
+};
 
-            <p className="text-xs text-slate-600 text-center">
-                By signing up, you agree to our Terms of Service and Privacy Policy
-            </p>
-        </form>
-    )
-}
+export default SignUp;
